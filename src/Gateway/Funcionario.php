@@ -93,7 +93,7 @@ class Funcionario {
     {
         $statement = "
             SELECT
-                chave_c , cartao_bb, cartao_capital, 
+                df2.matricula_funcionario as matricula, chave_c , cartao_bb, cartao_capital, 
                 cartao_bbts,num_contrato
             FROM dados_corporativos dc, dados_funcionario df2 
             WHERE df2.matricula_funcionario =? 
@@ -113,7 +113,7 @@ class Funcionario {
     public function findPessoal($matricula)
     {
         $statement = " 
-            SELECT nome, cpf, rg
+            SELECT df.matricula_funcionario as matricula, nome, cpf, rg
             FROM dados_funcionario df, dados_pessoais dp 
             WHERE df.matricula_funcionario =? 
                 and df.id = dp.id_funcionario;
@@ -166,8 +166,12 @@ class Funcionario {
 
     public function insertCorporativos(Array $input)
     {
+        $data_contratacao = date('Y-m-d 00:00:00',strtotime($input['data_contratacao']));
         $statement = [
-            "SELECT id_funcionario from dados_corporativos dc , dados_funcionario df where dc.id_funcionario = df.id and df.matricula_funcionario = :matricula;"
+            "SELECT id_funcionario 
+            FROM dados_corporativos dc , dados_funcionario df 
+            WHERE dc.id_funcionario = df.id 
+                AND df.matricula_funcionario = :matricula;"
         ];
         $statement1 = [
             [
@@ -182,8 +186,8 @@ class Funcionario {
         $statement = [
             "INSERT INTO dados_funcionario (matricula_funcionario,data_cadastro,data_alteracao)
             VALUES (:matricula,CURDATE(),CURDATE());",
-            "INSERT INTO dados_corporativos (id_funcionario,chave_c,cartao_bb,cartao_capital,cartao_bbts,num_contrato)
-            VALUES (LAST_INSERT_ID(),:chave_c,:cartao_bb,:cartao_capital,:cartao_bbts,:num_contrato);"
+            "INSERT INTO dados_corporativos (id_funcionario,chave_c,cartao_bb,cartao_capital,cartao_bbts,num_contrato,data_contratacao)
+            VALUES (LAST_INSERT_ID(),:chave_c,:cartao_bb,:cartao_capital,:cartao_bbts,:num_contrato,:data_contratacao);"
         ];
         $statement1 = [
             [
@@ -195,6 +199,7 @@ class Funcionario {
                 'cartao_capital' => $input['cartao_capital'] ?? null,
                 'cartao_bbts' => $input['cartao_bbts'] ?? null,
                 'num_contrato' => $input['num_contrato'] ?? null,
+                'data_contratacao' => $input['data_contratacao'] ?? null
             ],
         ];
 

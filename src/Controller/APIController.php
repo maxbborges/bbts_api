@@ -28,7 +28,7 @@ class APIController {
 
         $this->funcionario = new Funcionario($db);
         $this->evento = new Evento($db);
-        $this->login = new Seguranca($db);
+        $this->seguranca = new Seguranca($db);
     }
 
     // Função para tratamento da requisição GET, POST, PUT e DELETE
@@ -43,10 +43,12 @@ class APIController {
                 };
                 break;
             case 'POST':
-                if($this->gateway == 'login'){
-                    $response = $this->login();
-                } else if ($this->gateway == 'trocaSenha'){
-                    $response = $this->trocaSenha();
+                if($this->gateway == 'seguranca'){
+                    if ($this->parametros){
+                        $response = $this->trocaSenha();
+                    } else {
+                        $response = $this->login();
+                    }
                 } else {
                     $response = $this->create();
                 };
@@ -235,10 +237,7 @@ class APIController {
             return $this->unprocessableEntityResponse();
         }
 
-        $result = $this->login->trocaSenha($input);
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode($result);
-        return $response;
+        return $this->seguranca->trocaSenha($input);
     }
 
     private function login(){
@@ -247,11 +246,7 @@ class APIController {
             return $this->unprocessableEntityResponse();
         }
 
-        $result = $this->login->autenticar($input);
-
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode($result);
-        return $response;
+        return $this->seguranca->autenticar($input);
     }
 
     private function validate($input)
