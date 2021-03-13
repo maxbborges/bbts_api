@@ -9,6 +9,50 @@ class Evento {
         $this->db = $db;
     }
 
+    public function inserir($statement,$statement1){
+        try {
+            $this->db->beginTransaction();
+            foreach($statement as $key=>$value){
+                $state = $this->db->prepare($value);
+                $result = $state->execute($statement1[$key]);
+                if (!$result){
+                    $this->db->rollBack();
+                    return $result;
+                }
+                $state->closeCursor();
+            }
+
+            $this->db->commit();
+            return $result;
+
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }    
+    }
+
+    public function selecionar($statement,$statement1){
+        try {
+            $this->db->beginTransaction();
+            foreach($statement as $key=>$value){
+                $state = $this->db->prepare($value);
+                $state->execute($statement1[$key]);
+                $result = $state->fetchAll(\PDO::FETCH_ASSOC);
+                $state->closeCursor();
+            }
+
+            if (!$result or count($result)<1){
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->commit();
+            return $result;
+
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }
+    }
+
     public function findAll()
     {
         $statement = "
@@ -91,6 +135,11 @@ class Evento {
     {
         $data_inicio = date('Y-m-d 00:00:00',strtotime($input['data_inicio']));
         $data_fim = date('Y-m-d 23:59:59',strtotime($input['data_fim']));
+
+        if ($data_inicio<date() or $data_fim<$data_inicio){
+            return false;
+        }
+
         $statement = [
             "INSERT INTO administrativo (matricula_funcionario,data_cadastro,data_alteracao) 
             VALUES (:matricula,CURDATE(),CURDATE());",
@@ -113,25 +162,7 @@ class Evento {
             ],
         ];
 
-        try {
-            $this->db->beginTransaction();
-            foreach($statement as $key=>$value){
-                $state = $this->db->prepare($value);
-                $result = $state->execute($statement1[$key]);
-                $state->closeCursor();
-            }
-
-            if (!$result){
-                $this->db->rollBack();
-                return $result;
-            }
-
-            $this->db->commit();
-            return $result;
-
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
-        }    
+        return $this->inserir($statement,$statement1);
     }
 
     public function insertOutros(Array $input)

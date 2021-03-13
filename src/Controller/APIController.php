@@ -16,13 +16,12 @@ class APIController {
     private $evento;
 
     // Contrutor para a classe FuncionarioController
-    public function __construct($db, $requestMethod, $parametros)
+    public function __construct($db, $requestMethod, $parametros,$gateway)
     {
         $this->db = $db;
         $this->requestMethod = $requestMethod;
-        $this->gateway = $parametros['gateway'];
+        $this->gateway = $gateway;
         $this->tipo=$parametros['tipo'];
-        unset($parametros['gateway']);
         unset($parametros['tipo']);
         unset($parametros['/']);
         $this->parametros = $parametros;
@@ -62,47 +61,49 @@ class APIController {
                 $response = $this->notFoundResponse();
                 break;
         }
-        header($response['status_code_header']);
-        if ($response['body']) {
-            echo $response['body'];
+
+        if (isset($response['status_code_header'])){
+            return header($response['status_code_header']);
         }
+
+        header('HTTP/1.1 200 OK');
+        echo json_encode($response);
     }
     
     // Função para recuperação de todos os parametros: Evento, Funcionario, 
     private function getAll()
     {
         switch ($this->gateway){
-            case 'evento':
+            case 'eventos':
                 $result = $this->evento->findAll();
                 break;
                 
-            case 'funcionario':
+            case 'funcionarios':
                 $result = $this->funcionario->findAll();
                 break;
             
             default:
-                $result = array('Necessário GATEWAY para consulta (GETALL)!');
+                $result = $this->notFoundResponse();
         }
-            
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode($result);
-        return $response;
+        return $result;
     }
 
     // Função para recuperar dado especifico: Evento, Funcionario
     private function get($parametros)
     {
         switch ($this->gateway){
-            case 'evento':
+            case 'eventos':
                 if ($this->tipo=='data'){
                     $result = $this->evento->findbyDate($parametros['data']);
-                } else{
+                } else if (isset($parametros['matricula'])){
                     $result = $this->evento->findMatricula($parametros['matricula']);
+                } else {
+                    $result = $this->notFoundResponse();
                 }
                 
                 break;
                 
-            case 'funcionario':
+            case 'funcionarios':
                 if ($this->tipo=='pessoal'){
                     $result = $this->funcionario->findPessoal($parametros['matricula']);
                 } else if ($this->tipo=='corporativo'){
@@ -110,17 +111,15 @@ class APIController {
                 } else if ($this->tipo=='funcionario'){
                     $result = $this->funcionario->findFuncionario($parametros['matricula']);
                 } else {
-                    return $this->unprocessableEntityResponse();
+                    $result = $this->notFoundResponse();
                 }
                 break;
             
             default:
-                $result = array('Necessário GATEWAY para consulta (GET)!');
+                $result = $this->notFoundResponse();
         }
         
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode($result);
-        return $response;
+        return $result;
     }
 
     // Função para inserção de dados
@@ -128,46 +127,39 @@ class APIController {
     {
         $input = (array) json_decode(file_get_contents('php://input'), TRUE);
 
+        if (! $this->validate($input)) {
+            $result = $this->notFoundResponse();
+        }
+
         switch ($this->gateway){
-            case 'evento':
-                if (! $this->validate($input)) {
-                    return $this->unprocessableEntityResponse();
-                }
-                
+            case 'eventos':
                 if ($this->tipo=='ferias_abonos'){
                     $result = $this->evento->insertFeriasAbonos($input);
                 } else if ($this->tipo=='outros') {
                     $this->evento->insertOutros($input);
                 } else {
-                    return $this->unprocessableEntityResponse();
+                    $result = $this->notFoundResponse();
                 }
             
                 break;
                 
-            case 'funcionario':
-                if (! $this->validate($input)) {
-                    return $this->unprocessableEntityResponse();
-                }
-
+            case 'funcionarios':
                 if ($this->tipo=='funcionario'){
                     $result = $this->funcionario->insertFuncionario($input);
                 } else if ($this->tipo=='dados_corporativos'){
                     $result = $this->funcionario->insertCorporativos($input);
                 } else if ($this->tipo=='dados_pessoais') {
-                    $this->funcionario->insertPessoais($input);
+                    $result = $this->funcionario->insertPessoais($input);
                 } else {
-                    return $this->unprocessableEntityResponse();
+                    $result = $this->notFoundResponse();
                 }
                 break;
             
             default:
-                $result = array('Num parametro Encontrado GET!');
+                $result = $this->notFoundResponse();
         }
 
-        $response['status_code_header'] = 'HTTP/1.1 201 Created';
-        $response['body'] = json_encode($result);
-        // $response['body'] = $result ? json_encode($result) : false;
-        return $response;
+        return $result;
     }
 
     // Função para atualização de dados

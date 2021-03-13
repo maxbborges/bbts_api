@@ -164,79 +164,76 @@ class Funcionario {
         return $this->inserir($statement,$statement1);
     }
 
-    // public function insertFuncionario(Array $input)
-    // {
-    //     $statement = "
-    //         INSERT INTO funcionario (matricula)
-    //         VALUES (:matricula);
-    //         INSERT INTO dados_funcionario 
-    //         (matricula_funcionario,data_cadastro,data_alteracao) 
-    //         VALUES (:matricula,CURDATE(),CURDATE());
-    //         INSERT INTO dados_pessoais (id_funcionario,nome,cpf,rg) 
-    //         VALUES (LAST_INSERT_ID(),:nome,:cpf,:cpf);
-
-    //     ";
-
-    //     try {
-    //         $statement = $this->db->prepare($statement);
-    //         return $statement->execute(array(
-    //             'matricula' => $input['matricula'],
-    //             'nome'=>$input['nome'],
-    //             'cpf'=>$input['cpf'],
-    //             'rg'=>$input['rg'],
-    //         ));
-    //     } catch (\PDOException $e) {
-    //         exit($e->getMessage());
-    //     }    
-    // }
-
     public function insertCorporativos(Array $input)
     {
-        $statement = "
-            INSERT INTO dados_funcionario (matricula_funcionario,data_cadastro,data_alteracao)
-            VALUES (:matricula,CURDATE(),CURDATE());
-            INSERT INTO dados_corporativos (id_funcionario,chave_c,cartao_bb,cartao_capital,cartao_bbts,num_contrato)
-            VALUES (LAST_INSERT_ID(),:chave_c,:cartao_bb,:cartao_capital,:cartao_bbts,:num_contrato);
-        ";
+        $statement = [
+            "SELECT id_funcionario from dados_corporativos dc , dados_funcionario df where dc.id_funcionario = df.id and df.matricula_funcionario = :matricula;"
+        ];
+        $statement1 = [
+            [
+                'matricula' => $input['matricula']
+            ],
+        ];
 
-        try {
-            $statement = $this->db->prepare($statement);
-            return $statement->execute(array(
-                'matricula' => $input['matricula'],
+        if(!is_bool($this->selecionar($statement,$statement1))){
+            return false;
+        }
+
+        $statement = [
+            "INSERT INTO dados_funcionario (matricula_funcionario,data_cadastro,data_alteracao)
+            VALUES (:matricula,CURDATE(),CURDATE());",
+            "INSERT INTO dados_corporativos (id_funcionario,chave_c,cartao_bb,cartao_capital,cartao_bbts,num_contrato)
+            VALUES (LAST_INSERT_ID(),:chave_c,:cartao_bb,:cartao_capital,:cartao_bbts,:num_contrato);"
+        ];
+        $statement1 = [
+            [
+                'matricula' => $input['matricula']
+            ],
+            [
                 'chave_c' => $input['chave_c'] ?? null,
                 'cartao_bb' => $input['cartao_bb'] ?? null,
                 'cartao_capital' => $input['cartao_capital'] ?? null,
                 'cartao_bbts' => $input['cartao_bbts'] ?? null,
                 'num_contrato' => $input['num_contrato'] ?? null,
-            ));
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
-        }    
+            ],
+        ];
+
+        return $this->inserir($statement,$statement1);
     }
 
     public function insertPessoais(Array $input)
     {
-        $statement = "
-            INSERT INTO dados_funcionario (matricula_funcionario,data_cadastro,data_alteracao)
-            VALUES (:matricula,:data_cadastro,:data_alteracao);
-            INSERT INTO dados_pessoais(id_funcionario,nome,cpf,rg)
-            VALUES (LAST_INSERT_ID(),:nome,:cpf,:rg);
-        ";
+        $statement = [
+            "SELECT df.matricula_funcionario from dados_pessoais dp , dados_funcionario df where dp.id_funcionario = df.id and df.matricula_funcionario = :matricula;"
+        ];
+        $statement1 = [
+            [
+                'matricula' => $input['matricula']
+            ],
+        ];
 
-        try {
-            $statement = $this->db->prepare($statement);
-            $statement->execute(array(
-                'matricula' => $input['matricula'],
-                'data_cadastro'  => $input['data_cadastro'],
-                'data_alteracao' => $input['data_alteracao'] ?? null,
+        if(!is_bool($this->selecionar($statement,$statement1))){
+            return false;
+        }
+
+        $statement = [
+            "INSERT INTO dados_funcionario (matricula_funcionario,data_cadastro,data_alteracao)
+            VALUES (:matricula,CURDATE(),CURDATE());",
+            "INSERT INTO dados_pessoais(id_funcionario,nome,cpf,rg)
+            VALUES (LAST_INSERT_ID(),:nome,:cpf,:rg);"
+        ];
+        $statement1 = [
+            [
+                'matricula' => $input['matricula']
+            ],
+            [
                 'nome' => $input['nome'] ?? null,
                 'cpf' => $input['cpf'] ?? null,
-                'rg' => $input['rg'] ?? null,
-            ));
-            return $statement->rowCount();
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
-        }    
+                'rg' => $input['rg'] ?? null
+            ],
+        ];
+
+        return $this->inserir($statement,$statement1);
     }
 
     // public function update($id, Array $input)
