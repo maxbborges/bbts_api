@@ -206,67 +206,95 @@ class Funcionario {
         return $this->inserir($statement,$statement1);
     }
 
-    public function insertPessoais(Array $input)
+    public function updatePessoal(Array $input)
     {
         $statement = [
-            "SELECT df.matricula_funcionario from dados_pessoais dp , dados_funcionario df where dp.id_funcionario = df.id and df.matricula_funcionario = :matricula;"
+            "SELECT df.id from dados_pessoais dp , dados_funcionario df where dp.id_funcionario = df.id and df.matricula_funcionario = :matricula;"
         ];
+                
         $statement1 = [
             [
                 'matricula' => $input['matricula']
             ],
         ];
 
-        if(!is_bool($this->selecionar($statement,$statement1))){
+        $result = $this->selecionar($statement,$statement1);
+        if(is_bool($result)){
             return false;
         }
 
+                
         $statement = [
-            "INSERT INTO dados_funcionario (matricula_funcionario,data_cadastro,data_alteracao)
-            VALUES (:matricula,CURDATE(),CURDATE());",
-            "INSERT INTO dados_pessoais(id_funcionario,nome,cpf,rg)
-            VALUES (LAST_INSERT_ID(),:nome,:cpf,:rg);"
+            "UPDATE dados_funcionario 
+            SET data_alteracao = CURDATE()
+            WHERE id=:id_funcionario;",
+            "UPDATE dados_pessoais
+            SET cpf = :cpf, rg = :rg
+            WHERE id_funcionario = :id_funcionario;"
         ];
+        
         $statement1 = [
             [
-                'matricula' => $input['matricula']
+                'id_funcionario' => $result[0]['id']
             ],
             [
-                'nome' => $input['nome'] ?? null,
+                'id_funcionario' => $result[0]['id'],
                 'cpf' => $input['cpf'] ?? null,
                 'rg' => $input['rg'] ?? null
-            ],
+            ]
         ];
 
         return $this->inserir($statement,$statement1);
     }
 
-    // public function update($id, Array $input)
-    // {
-    //     $statement = "
-    //         UPDATE person
-    //         SET 
-    //             firstname = :firstname,
-    //             lastname  = :lastname,
-    //             firstparent_id = :firstparent_id,
-    //             secondparent_id = :secondparent_id
-    //         WHERE id = :id;
-    //     ";
+    public function updateCorporativo(Array $input)
+    {
+        $statement = [
+            "SELECT df.id 
+            FROM dados_corporativos dc , dados_funcionario df 
+            WHERE dc.id_funcionario = df.id 
+                AND df.matricula_funcionario = :matricula;"
+        ];
+                
+        $statement1 = [
+            [
+                'matricula' => $input['matricula']
+            ],
+        ];
 
-    //     try {
-    //         $statement = $this->db->prepare($statement);
-    //         $statement->execute(array(
-    //             'id' => (int) $id,
-    //             'firstname' => $input['firstname'],
-    //             'lastname'  => $input['lastname'],
-    //             'firstparent_id' => $input['firstparent_id'] ?? null,
-    //             'secondparent_id' => $input['secondparent_id'] ?? null,
-    //         ));
-    //         return $statement->rowCount();
-    //     } catch (\PDOException $e) {
-    //         exit($e->getMessage());
-    //     }    
-    // }
+        $result = $this->selecionar($statement,$statement1);
+        if(is_bool($result)){
+            return false;
+        }
+        
+                
+        $statement = [
+            "UPDATE dados_funcionario 
+            SET data_alteracao = CURDATE()
+            WHERE id=:id_funcionario;",
+            "UPDATE dados_corporativos
+            SET chave_c = :chave_c, cartao_bb = :cartao_bb, cartao_capital = :cartao_capital,
+                cartao_bbts = :cartao_bbts, num_contrato = :num_contrato, data_contratacao = :data_contratacao
+            WHERE id_funcionario = :id_funcionario;"
+        ];
+        
+        $statement1 = [
+            [
+                'id_funcionario' => $result[0]['id']
+            ],
+            [
+                'id_funcionario' => $result[0]['id'],
+                'chave_c' => $input['chave_c'] ?? null,
+                'cartao_bb' => $input['cartao_bb'] ?? null,
+                'cartao_capital' => $input['cartao_capital'] ?? null,
+                'cartao_bbts' => $input['cartao_bbts'] ?? null,
+                'num_contrato' => $input['num_contrato'] ?? null,
+                'data_contratacao' => $input['data_contratacao'] ?? null
+            ]
+        ];
+
+        return $this->inserir($statement,$statement1);
+    }
 
     // public function delete($id)
     // {

@@ -150,10 +150,6 @@ class APIController {
             case 'funcionarios':
                 if ($this->tipo=='funcionario'){
                     $result = $this->funcionario->insertFuncionario($input);
-                } else if ($this->tipo=='dados_corporativos'){
-                    $result = $this->funcionario->insertCorporativos($input);
-                } else if ($this->tipo=='dados_pessoais') {
-                    $result = $this->funcionario->insertPessoais($input);
                 } else {
                     $result = $this->notFoundResponse();
                 }
@@ -171,53 +167,35 @@ class APIController {
     {
         $input = (array) json_decode(file_get_contents('php://input'), TRUE);
         switch ($this->gateway){
-            case 'evento':
-                $result = $this->evento->find($parametros['matricula']);
-                if (! $result) {
-                    return $this->notFoundResponse();
-                }
+            case 'eventos':
 
-                if ($this->tipo=='ferias_abonos'){
-                    if (! $this->validate($input)) {
-                        return $this->unprocessableEntityResponse();
-                    }
-                    $this->evento->update($id, $input);
-                    
-                } else if ($this->tipo=='outros') {
-                    if (! $this->validate($input)) {
-                        return $this->unprocessableEntityResponse();
-                    }
-                    $this->evento->update($id, $input);
-                } else {
-                    return $this->unprocessableEntityResponse();
-                }
                 break;
-            case 'funcionario':
-                $result = $this->funcionario->find($parametros['matricula']);
-                if (! $result) {
-                    return $this->notFoundResponse();
-                }
-
+            case 'funcionarios':
                 if ($this->tipo=='dados_corporativos'){
-                    if (! $this->validate($input)) {
+                    $result = $this->funcionario->updateCorporativo($input);
+                    
+                    if (! $result) {
+                        return $this->notFoundResponse();
+                    } else if (! $this->validate($input)) {
                         return $this->unprocessableEntityResponse();
                     }
-                    // $this->funcionario->update($id, $input);
                 } else if ($this->tipo=='dados_pessoais') {
-                    if (! $this->validate($input)) {
+                    $result = $this->funcionario->updatePessoal($input);
+
+                    if (! $result) {
+                        return $this->notFoundResponse();
+                    } else if (! $this->validate($input)) {
                         return $this->unprocessableEntityResponse();
                     }
-                    // $this->funcionario->update($id, $input);
                 } else {
                     return $this->unprocessableEntityResponse();
                 }
                 break;
             default:
-                $error = array('Num parametro Encontrado PUT!');
+                $result = $this->notFoundResponse();
         }
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = $error ? json_encode($error) : null;
-        return $response;
+
+        return $result;
     }
 
     // Função para Deletar dados
