@@ -97,6 +97,8 @@ class APIController {
             case 'eventos':
                 if ($this->tipo=='data'){
                     $result = $this->evento->findbyDate($parametros['data']);
+                } else if ($this->tipo=='id'){
+                    $result = $this->evento->findbyId($parametros['id']);
                 } else if (isset($parametros['matricula'])){
                     $result = $this->evento->findMatricula($parametros['matricula']);
                 } else {
@@ -245,7 +247,6 @@ class APIController {
         if (! $this->validate($input)) {
             return $this->unprocessableEntityResponse();
         }
-
         return $this->seguranca->autenticar($input);
     }
 

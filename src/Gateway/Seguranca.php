@@ -128,26 +128,13 @@ Class Seguranca {
                 'senha'=> $senha
             ],
         ];
-
-        try {
-            $this->db->beginTransaction();
-            foreach($statement as $key=>$value){
-                $state = $this->db->prepare($value);
-                $state->execute($statement1[$key]);
-                $result = $state->fetchAll(\PDO::FETCH_ASSOC);
-                $state->closeCursor();
-            }
-
-            if (!$result or count($result)<3){
-                $this->db->rollBack();
-                return false;
-            }
-
-            $this->db->commit();
-            return $result;
-
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
+        
+        $result = $this->selecionar($statement,$statement1);
+        
+        if (count($result) < 3 ){
+            return false;
         }
+
+        return $result;
     }
 }

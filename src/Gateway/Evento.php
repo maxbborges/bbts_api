@@ -131,6 +131,24 @@ class Evento {
         }    
     }
 
+    public function findbyId($id)
+    {
+        $statement = [
+            "SELECT *
+            FROM ferias_abonos fa
+            WHERE fa.id = $id"
+        ];
+
+        $statement1 = [
+            ['id'=>$id]
+        ];
+
+        return $this->selecionar($statement,$statement1);
+
+
+
+    }
+
     public function insertFeriasAbonos(Array $input)
     {
         $data_inicio = date('Y-m-d 00:00:00',strtotime($input['data_inicio']));
