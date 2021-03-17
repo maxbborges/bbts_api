@@ -58,7 +58,8 @@ class Evento {
         $statement = "
             SELECT 
                 f.id,f.status,f.numero_abonos,f.adiantamento,
-                a.data_cadastro,f.data_inicio, f.data_fim, 
+                a.data_cadastro,DATE_FORMAT(f.data_inicio,'%d-%m-%Y') as data_inicio, 
+                DATE_FORMAT(f.data_inicio,'%d-%m-%Y') as data_fim, 
                 f.tipo, a.matricula_funcionario, 
                 (SELECT 
                     nome 
@@ -110,7 +111,8 @@ class Evento {
     {
         $statement = "
         SELECT fa.id as id_ferias_abonos , a.id as id_administrativo,
-            nome,data_inicio,data_fim,a.data_cadastro, 
+            nome,DATE_FORMAT(data_inicio,'%d-%m-%Y') as data_inicio,
+            DATE_FORMAT(data_fim,'%d-%m-%Y') as data_fim ,a.data_cadastro, 
             a.data_alteracao,fa.status 
         FROM ferias_abonos fa , faltas_folgas ff, administrativo a, 
             dados_funcionario df, dados_pessoais dp 
@@ -134,9 +136,12 @@ class Evento {
     public function findbyId($id)
     {
         $statement = [
-            "SELECT *
+            "SELECT id,numero_abonos , adiantamento,
+                DATE_FORMAT(data_inicio,'%d-%m-%Y') as data_inicio, 
+                DATE_FORMAT(data_fim,'%d-%m-%Y') as data_fim, 
+                status , tipo
             FROM ferias_abonos fa
-            WHERE fa.id = $id"
+            WHERE fa.id = $id;"
         ];
 
         $statement1 = [
